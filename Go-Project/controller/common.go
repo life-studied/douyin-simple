@@ -17,7 +17,7 @@ type Video struct {
 
 type Comment struct {
 	Id         int64  `json:"id,omitempty"`
-	User       User   `json:"user"`
+	User       User   `json:"user" gorm:"foreignKey:user_id;references:id;"`
 	Content    string `json:"content,omitempty"`
 	CreateDate string `json:"create_date,omitempty"`
 }
@@ -25,6 +25,7 @@ type Comment struct {
 type User struct {
 	Id            int64  `json:"id,omitempty"`
 	Name          string `json:"name,omitempty"`
+	Password      string ` json:"-"`
 	FollowCount   int64  `json:"follow_count,omitempty"`
 	FollowerCount int64  `json:"follower_count,omitempty"`
 	IsFollow      bool   `json:"is_follow,omitempty"`
