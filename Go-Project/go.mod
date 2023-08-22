@@ -1,6 +1,7 @@
 module github.com/life-studied/douyin-simple
 
-go 1.20
+
+go 1.16
 
 require (
 	github.com/gavv/httpexpect/v2 v2.8.0
