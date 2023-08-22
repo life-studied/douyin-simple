@@ -53,3 +53,13 @@ type Like struct {
 	User  User  `gorm:"foreignkey:UserID" json:"-"`
 	Video Video `gorm:"foreignkey:VideoID" json:"-"`
 }
+
+var (
+	SERVER_DB *gorm.DB
+)
+
+// BeginTransaction 开始事务
+func BeginTransaction() *gorm.DB {
+	return SERVER_DB.Begin()
+}
+
