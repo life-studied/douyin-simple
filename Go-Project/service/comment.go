@@ -12,7 +12,8 @@ func (cs *CommentService) QueryComment(videoId int64, token string) ([]model.Com
 	var comments []model.Comment
 	var err error
 	//dao层操作
-	comments, err = dao.Groups.Comments.QueryCommentsByVideoId(videoId)
+	c := &dao.Comments{}
+	comments, err = c.QueryCommentsByVideoId(videoId)
 	if err != nil {
 		return nil, err
 	}
