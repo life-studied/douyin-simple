@@ -5,14 +5,15 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/life-studied/douyin-simple/dao"
 	"github.com/life-studied/douyin-simple/model"
-	"net/http"
+	"net/http
 	"strconv"
 	"time"
+
 )
 
 type CommentListResponse struct {
 	Response
-	CommentList []Comment `json:"comment_list,omitempty"`
+	CommentList []model.Comment `json:"comment_list,omitempty"`
 }
 
 type CommentActionResponse struct {
@@ -185,4 +186,4 @@ func CommentList(c *gin.Context) {
 			CommentList: commentList,
 		})
 	return
-}
+

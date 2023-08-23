@@ -7,4 +7,5 @@ type Comment struct {
 	User       User   `json:"user" gorm:"foreignKey:user_id;references:id;"`
 	Content    string `json:"content,omitempty"`
 	CreateDate int64  `json:"create_date,omitempty"`
+
 }

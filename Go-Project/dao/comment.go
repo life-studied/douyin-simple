@@ -1,10 +1,12 @@
 package dao
 
 import (
+	"errors"
+	"fmt"
 	"github.com/life-studied/douyin-simple/global"
 	"github.com/life-studied/douyin-simple/model"
+	"gorm.io/gorm"
 )
-
 // GetCommentByIdListById 根据video_id返回视频评论列表
 func GetCommentByIdListById(videoID int64) ([]model.Comment, error) {
 	var comments []model.Comment
@@ -45,4 +47,18 @@ func CreateComment(comment *model.Comment) error {
 func DeleteCommentById(commentID int64) error {
 	err := global.DB.Where("id = ?", commentID).Delete(model.Comment{}).Error
 	return err
+}
+
+// CommentRepository QueryCommentsByVideoId 根据视频id查询该视频的评论列表
+type Comments struct{}
+
+func (c *Comments) QueryCommentsByVideoId(videoId int64) ([]model.Comment, error) {
+	var comments []model.Comment
+	if err := global.DB.Preload("User").Where("video_id = ?", videoId).Find(&comments).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("没有找到%d这个视频的评论！", videoId)
+		}
+		return nil, fmt.Errorf("查询评论失败：%w", err)
+	}
+	return comments, nil
 }
