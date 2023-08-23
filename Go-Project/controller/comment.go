@@ -2,8 +2,9 @@ package controller
 
 import (
 	"fmt"
-	"github.com/RaymondCode/simple-demo/dao"
 	"github.com/gin-gonic/gin"
+	"github.com/life-studied/douyin-simple/dao"
+	"github.com/life-studied/douyin-simple/model"
 	"net/http"
 	"strconv"
 	"time"
@@ -58,9 +59,9 @@ func CommentAction(c *gin.Context) {
 	if actionType == "1" {
 		// 发布评论
 		//  创建comment结构体
-		comment := dao.Comment{
-			UserID:     userID,
-			VideoID:    videoID,
+		comment := model.Comment{
+			UserId:     userID,
+			VideoId:    videoID,
 			Content:    commentText,
 			CreateDate: currentTime,
 		}
@@ -69,7 +70,7 @@ func CommentAction(c *gin.Context) {
 		err := dao.CreateComment(&comment)
 		if err != nil {
 			// 如果发生错误，将数据库回滚到未添加评论的初始状态
-			defer RollbackTransaction(tx)
+			defer dao.RollbackTransaction(tx)
 			fmt.Printf("添加评论异常：%s", err)
 
 			c.JSON(http.StatusInternalServerError, CommentActionResponse{
@@ -82,7 +83,7 @@ func CommentAction(c *gin.Context) {
 		//commenter, err := dao.GetUserById(userID)
 		if err != nil {
 			// 如果发生错误，将数据库回滚到未添加评论的初始状态
-			defer RollbackTransaction(tx)
+			defer dao.RollbackTransaction(tx)
 			fmt.Printf("获取用户异常：%s", err)
 
 			c.JSON(http.StatusInternalServerError, CommentActionResponse{
@@ -112,14 +113,14 @@ func CommentAction(c *gin.Context) {
 			})
 			return
 		}
-		commenterID := comment.UserID
+		commenterID := comment.UserId
 		//  若有权限，则删除id为commentID评论;若无权限，则拒绝删除
 		if commenterID == userID {
 			tx := dao.BeginTransaction()
 			err = dao.DeleteCommentById(commentID)
 			if err != nil {
 				// 如果发生错误，将数据库回滚到未删除评论的初始状态
-				defer RollbackTransaction(tx)
+				defer dao.RollbackTransaction(tx)
 				fmt.Printf("删除评论异常：%s", err)
 
 				c.JSON(http.StatusInternalServerError, CommentActionResponse{
@@ -171,7 +172,7 @@ func CommentList(c *gin.Context) {
 	for _, comment := range comments {
 
 		commentResponse := Comment{
-			Id:      comment.ID,
+			Id:      comment.Id,
 			Content: comment.Content,
 		}
 		commentList = append(commentList, commentResponse)
