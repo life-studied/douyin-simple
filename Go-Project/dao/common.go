@@ -6,7 +6,11 @@
 // -------------------------------------------
 package dao
 
-import "time"
+import (
+	"github.com/life-studied/douyin-simple/global"
+	"gorm.io/gorm"
+	"time"
+)
 
 type User struct {
 	ID       int64  `gorm:"primary_key;column:id;comment:'用户ID'" json:"id"`
@@ -33,11 +37,11 @@ type Follow struct {
 }
 
 type Comment struct {
-	ID         int64     `gorm:"primary_key;column:id;comment:'评论ID'" json:"id"`
-	UserID     int64     `gorm:"column:user_id;not null;comment:'用户ID'" json:"user_id"`
-	VideoID    int64     `gorm:"column:video_id;not null;comment:'视频ID'" json:"video_id"`
-	Content    string    `gorm:"column:content;not null;comment:'评论内容'" json:"content"`
-	CreateDate time.Time `gorm:"column:create_date;not null;comment:'创建日期'" json:"create_date"`
+	ID         int64  `gorm:"primary_key;column:id;comment:'评论ID'" json:"id"`
+	UserID     int64  `gorm:"column:user_id;not null;comment:'用户ID'" json:"user_id"`
+	VideoID    int64  `gorm:"column:video_id;not null;comment:'视频ID'" json:"video_id"`
+	Content    string `gorm:"column:content;not null;comment:'评论内容'" json:"content"`
+	CreateDate int64  `gorm:"column:create_date;not null;comment:'创建日期'" json:"create_date"`
 
 	// Foreign key references
 	User  User  `gorm:"foreignkey:UserID" json:"-"`
@@ -54,12 +58,12 @@ type Like struct {
 	Video Video `gorm:"foreignkey:VideoID" json:"-"`
 }
 
-var (
-	SERVER_DB *gorm.DB
-)
-
 // BeginTransaction 开始事务
 func BeginTransaction() *gorm.DB {
-	return SERVER_DB.Begin()
+	return global.DB.Begin()
 }
 
+// RollbackTransaction 回滚事务
+func RollbackTransaction(tx *gorm.DB) {
+	tx.Rollback()
+}
