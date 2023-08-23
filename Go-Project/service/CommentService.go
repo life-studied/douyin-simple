@@ -2,8 +2,9 @@ package service
 
 import (
 	"fmt"
-	"github.com/RaymondCode/simple-demo/controller"
-	"github.com/RaymondCode/simple-demo/dao"
+	"github.com/life-studied/douyin-simple/controller"
+	"github.com/life-studied/douyin-simple/dao"
+	"github.com/life-studied/douyin-simple/model"
 	"net/http"
 	"time"
 )
@@ -19,9 +20,9 @@ func CreateComment(userID int64, videoID int64, commentText string) (controller.
 	currentTime := time.Now().Unix()
 	// 发布评论
 	// 创建comment结构体
-	comment := dao.Comment{
-		UserID:     userID,
-		VideoID:    videoID,
+	comment := model.Comment{
+		UserId:     userID,
+		VideoId:    videoID,
 		Content:    commentText,
 		CreateDate: currentTime,
 	}
@@ -30,7 +31,7 @@ func CreateComment(userID int64, videoID int64, commentText string) (controller.
 	err := dao.CreateComment(&comment)
 	if err != nil {
 		// 如果发生错误，将数据库回滚到未添加评论的初始状态
-		defer controller.RollbackTransaction(tx)
+		defer dao.RollbackTransaction(tx)
 		fmt.Printf("添加评论异常：%s", err)
 
 		commentActionResponse := controller.CommentActionResponse{
@@ -43,7 +44,7 @@ func CreateComment(userID int64, videoID int64, commentText string) (controller.
 	//err = dao.UpdateVideoCommentCount(videoID, 1)
 	if err != nil {
 		// 如果发生错误，将数据库回滚到未添加评论的初始状态
-		defer controller.RollbackTransaction(tx)
+		defer dao.RollbackTransaction(tx)
 		fmt.Printf("更新评论总数异常：%s", err)
 
 		commentActionResponse := controller.CommentActionResponse{
@@ -58,7 +59,7 @@ func CreateComment(userID int64, videoID int64, commentText string) (controller.
 	//commenter, err := dao.GetUserById(userID)
 	if err != nil {
 		// 如果发生错误，将数据库回滚到未添加评论的初始状态
-		defer controller.RollbackTransaction(tx)
+		defer dao.RollbackTransaction(tx)
 		fmt.Printf("获取用户异常：%s", err)
 
 		commentActionResponse := controller.CommentActionResponse{
@@ -95,14 +96,14 @@ func DeleteComment(userID int64, videoID int64, commentID int64) (controller.Com
 		}
 		return commentActionResponse, err
 	}
-	commenterID := comment.UserID
+	commenterID := comment.UserId
 	//  若有权限，则删除id为commentID评论;若无权限，则拒绝删除
 	if commenterID == userID {
 		tx := dao.BeginTransaction()
 		err = dao.DeleteCommentById(commentID)
 		if err != nil {
 			// 如果发生错误，将数据库回滚到未删除评论的初始状态
-			defer controller.RollbackTransaction(tx)
+			defer dao.RollbackTransaction(tx)
 			fmt.Printf("删除评论异常：%s", err)
 
 			commentActionResponse = controller.CommentActionResponse{
@@ -115,7 +116,7 @@ func DeleteComment(userID int64, videoID int64, commentID int64) (controller.Com
 		//err = dao.UpdateVideoCommentCount(videoID, -1)
 		if err != nil {
 			// 如果发生错误，将数据库回滚到未删除评论的初始状态
-			defer controller.RollbackTransaction(tx)
+			defer dao.RollbackTransaction(tx)
 			fmt.Printf("更新视频评论数异常：%s", err)
 
 			commentActionResponse = controller.CommentActionResponse{
