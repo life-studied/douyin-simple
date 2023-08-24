@@ -12,23 +12,23 @@ func FavoriteAction(c *gin.Context) {
 	//接收参数，并判断是否合法
 	token, tokenOk := c.GetQuery("token")
 	if tokenOk {
-		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "Lack of token"})
+		c.JSON(http.StatusBadRequest, Response{StatusCode: 400, StatusMsg: "Lack of token"})
 		return
 	}
 	userFromToken, exist := usersLoginInfo[token]
 	if exist {
-		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "Token is invalid"})
+		c.JSON(http.StatusUnprocessableEntity, Response{StatusCode: 422, StatusMsg: "Token is invalid"})
 		return
 	}
 
 	videoId, videoIdOk := c.GetQuery("video_id")
 	if videoIdOk {
-		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "Lack of video_id"})
+		c.JSON(http.StatusBadRequest, Response{StatusCode: 400, StatusMsg: "Lack of video_id"})
 		return
 	}
 	actionType, actionTypeOk := c.GetQuery("action_type")
 	if actionTypeOk {
-		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "Lack of action_type"})
+		c.JSON(http.StatusBadRequest, Response{StatusCode: 400, StatusMsg: "Lack of action_type"})
 		return
 	}
 
@@ -43,22 +43,22 @@ func FavoriteAction(c *gin.Context) {
 	if actionType == "1" {
 		err := service.FavoriteVideo(video, user)
 		if err != nil {
-			c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "Favorite failed"})
+			c.JSON(http.StatusInternalServerError, Response{StatusCode: 500, StatusMsg: "Favorite failed"})
 			//打印报错
-			fmt.Println(err.Error())
+			fmt.Printf("\033[1;37;41m%s\033[0m\n", "|BUG | "+err.Error()+"form Favorite")
 			return
 		}
 
 	} else if actionType == "2" {
 		err := service.UnfavoriteVideo(video, user)
 		if err != nil {
-			c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "Unfavorite failed"})
+			c.JSON(http.StatusInternalServerError, Response{StatusCode: 500, StatusMsg: "Unfavorite failed"})
 			//打印报错
-			fmt.Println(err.Error())
+			fmt.Printf("\033[1;37;41m%s\033[0m\n", "|BUG | "+err.Error()+"form Favorite")
 			return
 		}
 	} else {
-		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "Invalid action_type"})
+		c.JSON(http.StatusUnprocessableEntity, Response{StatusCode: 422, StatusMsg: "Invalid action_type"})
 		return
 	}
 	c.JSON(http.StatusOK, Response{StatusCode: 0, StatusMsg: "Success"})
@@ -69,9 +69,9 @@ func FavoriteList(c *gin.Context) {
 	//接收参数，并判断是否合法
 	token, tokenOk := c.GetQuery("token")
 	if tokenOk {
-		c.JSON(http.StatusOK, VideoListResponse{
+		c.JSON(http.StatusBadRequest, VideoListResponse{
 			Response: Response{
-				StatusCode: 1,
+				StatusCode: 400,
 				StatusMsg:  "Lack of token",
 			},
 			VideoList: nil,
@@ -81,9 +81,9 @@ func FavoriteList(c *gin.Context) {
 	//检测token
 	userFromToken, exist := usersLoginInfo[token]
 	if exist {
-		c.JSON(http.StatusOK, VideoListResponse{
+		c.JSON(http.StatusUnprocessableEntity, VideoListResponse{
 			Response: Response{
-				StatusCode: 1,
+				StatusCode: 422,
 				StatusMsg:  "Token is invalid",
 			},
 			VideoList: nil,
@@ -98,9 +98,9 @@ func FavoriteList(c *gin.Context) {
 	//用不到但是必须要有的接收参数
 	_, userIdOk := c.GetQuery("user_id")
 	if userIdOk {
-		c.JSON(http.StatusOK, VideoListResponse{
+		c.JSON(http.StatusBadRequest, VideoListResponse{
 			Response: Response{
-				StatusCode: 1,
+				StatusCode: 400,
 				StatusMsg:  "Lack of user_id",
 			},
 			VideoList: nil,
@@ -110,7 +110,15 @@ func FavoriteList(c *gin.Context) {
 	//获取用户收藏的视频列表
 	videoList, err := service.ReadFavoriteVideo(user)
 	if err != nil {
-
+		fmt.Printf("\033[1;37;41m%s\033[0m\n", "| BUG | "+err.Error()+"form Favorite")
+		c.JSON(http.StatusInternalServerError, VideoListResponse{
+			Response: Response{
+				StatusCode: 500,
+				StatusMsg:  "Internal server error",
+			},
+			VideoList: nil,
+		})
+		return
 	}
 	//转为前端需要的结构体类型
 	c.JSON(http.StatusOK, serviceToVideoList(videoList))
