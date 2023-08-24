@@ -16,6 +16,7 @@ func CommentAction(c *gin.Context) {
 		// 处理videoID解析错误
 		c.JSON(http.StatusBadRequest, response.CommentActionResponse{
 			Response: response.Response{StatusCode: http.StatusBadRequest, StatusMsg: "无效的video_id"},
+
 		})
 		return
 	}
@@ -83,3 +84,4 @@ func CommentList(c *gin.Context) {
 		})
 	return
 }
+
