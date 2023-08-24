@@ -1,11 +1,11 @@
-package initialize
+package main
 
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/life-studied/douyin-simple/controller"
 )
 
-func InitRouter(r *gin.Engine) {
+func initRouter(r *gin.Engine) {
 	// public directory is used to serve static resources
 	r.Static("/static", "./public")
 
