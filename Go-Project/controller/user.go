@@ -3,27 +3,20 @@ package controller
 import (
 	"fmt"
 	"log"
+
+	"github.com/gin-gonic/gin"
+	"github.com/life-studied/douyin-simple/dao"
 	"net/http"
 	"strconv"
 	"sync/atomic"
 
-	"github.com/gin-gonic/gin"
-	"github.com/life-studied/douyin-simple/dao"
 	"github.com/life-studied/douyin-simple/service"
 )
 
 // usersLoginInfo use map to store user info, and key is username+password for demo
 // user data will be cleared every time the server starts
 // test data: username=zhanglei, password=douyin
-var usersLoginInfo = map[string]User{
-	"zhangleidouyin": {
-		Id:            6,
-		Name:          "zhanglei",
-		FollowCount:   10,
-		FollowerCount: 5,
-		IsFollow:      true,
-	},
-}
+var usersLoginInfo = map[string]User{}
 
 var userIdSequence = int64(0)
 
@@ -116,17 +109,19 @@ func Login(c *gin.Context) {
 
 	token := username + password
 
-	if user, exist := usersLoginInfo[token]; exist {
+	user, err := service.LoginUser(username, password)
+	if err != nil {
 		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: Response{StatusCode: 0},
-			UserId:   user.Id,
-			Token:    token,
+			Response: Response{StatusCode: 1, StatusMsg: "登录失败！请检查用户名和密码。"},
 		})
-	} else {
-		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: Response{StatusCode: 1, StatusMsg: "User doesn't exist"},
-		})
+		return
 	}
+
+	c.JSON(http.StatusOK, UserLoginResponse{
+		Response: Response{StatusCode: 0},
+		UserId:   user.ID,
+		Token:    token,
+	})
 }
 
 func UserInfo(c *gin.Context) {

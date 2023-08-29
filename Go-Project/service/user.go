@@ -66,3 +66,11 @@ func RequireAllUser() ([]dao.User, error) {
 	}
 	return users, nil
 }
+// 查询用户名和密码
+func LoginUser(username, password string) (dao.User, error) {
+	user, err := dao.GetUserByUsernameAndPassword(username, password)
+	if err != nil {
+		return dao.User{}, err
+	}
+	return user, nil
+}
