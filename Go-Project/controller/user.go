@@ -1,14 +1,13 @@
 package controller
 
 import (
-	"fmt"
 	"log"
-
-	"github.com/gin-gonic/gin"
-	"github.com/life-studied/douyin-simple/dao"
 	"net/http"
 	"strconv"
 	"sync/atomic"
+
+	"github.com/gin-gonic/gin"
+	"github.com/life-studied/douyin-simple/dao"
 
 	"github.com/life-studied/douyin-simple/service"
 )
@@ -28,9 +27,9 @@ var usersLoginInfo = map[string]User{
 	"user_1password_1": {
 		Id:            1,
 		Name:          "user_1",
-		FollowCount:   0,
-		FollowerCount: 0,
-		IsFollow:      false,
+		FollowCount:   2,
+		FollowerCount: 3,
+		IsFollow:      true,
 	},
 	"user_2password_2": {
 		Id:            1,
@@ -72,7 +71,7 @@ type UserLoginResponse struct {
 
 type UserResponse struct {
 	Response
-	User dao.User `json:"user"`
+	User User `json:"user"`
 }
 
 func Register(c *gin.Context) {
@@ -150,10 +149,12 @@ func Register(c *gin.Context) {
 func Login(c *gin.Context) {
 	username := c.Query("username")
 	password := c.Query("password")
+	var enToken string
 
 	token := username + password
+	enToken = service.Encryption(username, password)
 
-	user, err := service.LoginUser(username, password)
+	_, err := service.LoginUser(username, password)
 	if err != nil {
 		c.JSON(http.StatusOK, UserLoginResponse{
 			Response: Response{StatusCode: 1, StatusMsg: "登录失败！请检查用户名和密码。"},
@@ -161,9 +162,19 @@ func Login(c *gin.Context) {
 		return
 	}
 
+	//在映射中用token查id
+	loggedInUser, found := usersLoginInfo[enToken]
+	if !found {
+		c.JSON(http.StatusInternalServerError, UserLoginResponse{
+			Response: Response{StatusCode: 1, StatusMsg: "登录失败！用户信息不存在。"},
+		})
+		return
+	}
+
+	//返回正确响应
 	c.JSON(http.StatusOK, UserLoginResponse{
-		Response: Response{StatusCode: 0},
-		UserId:   user.ID,
+		Response: Response{StatusCode: 0, StatusMsg: "登录成功！"},
+		UserId:   loggedInUser.Id,
 		Token:    token,
 	})
 }
@@ -181,10 +192,15 @@ func UserInfo(c *gin.Context) {
 			Response: Response{StatusCode: 1, StatusMsg: "User doesn't exist"},
 		})
 	} else {
-		fmt.Println("User = ", service.MapToJson(user))
+		token := user.Name + user.Password
+		respUser, exists := usersLoginInfo[token]
+		if !exists {
+			return
+		}
+		service.MapToJson(respUser)
 		c.JSON(http.StatusOK, UserResponse{
 			Response: Response{StatusCode: 0},
-			User:     user,
+			User:     respUser,
 		})
 	}
 }
