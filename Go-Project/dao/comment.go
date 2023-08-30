@@ -61,3 +61,4 @@ func InCreCommentCount(videoId int64, count int) error {
 func DeCreCommentCount(videoId int64, count int) error {
 	return global.DB.Model(&model.Video{}).Where("id = ?", videoId).Update("comment_count", gorm.Expr("comment_count - ?", count)).Error
 }
+
