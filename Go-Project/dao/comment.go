@@ -8,12 +8,14 @@ import (
 	"gorm.io/gorm"
 )
 
-// GetCommentByIdListById 根据video_id返回视频评论列表
-func GetCommentByIdListById(videoID int64) ([]model.Comment, error) {
+// QueryCommentsByVideoId 根据视频id查询该视频的评论列表
+func QueryCommentsByVideoId(videoId int64) ([]model.Comment, error) {
 	var comments []model.Comment
-	err := global.DB.Where("video_id = ?", videoID).Find(&comments).Error
-	if err != nil {
-		return nil, err
+	if err := global.DB.Preload("User").Where("video_id = ?", videoId).Find(&comments).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("没有找到%d这个视频的评论！", videoId)
+		}
+		return nil, fmt.Errorf("查询评论失败：%w", err)
 	}
 	return comments, nil
 }
@@ -40,7 +42,7 @@ func GetCommentById(commentID int64) (model.Comment, error) {
 
 // CreateComment 创建评论
 func CreateComment(comment *model.Comment) error {
-	err := global.DB.Create(comment).Error
+	err := global.DB.Create(&comment).Error
 	return err
 }
 
@@ -50,37 +52,13 @@ func DeleteCommentById(commentID int64) error {
 	return err
 }
 
-// UpdateVideoCommentCount 根据视频ID更新视频表的评论总数字段
-func UpdateVideoCommentCount(videoID int64, operand int64) error {
-	// 查询视频数据
-	var video model.Video
-	err := global.DB.First(&video, videoID).Error
-	if err != nil {
-		return err
-	}
-
-	// 更新评论总数字段
-	video.Comment_count += operand
-
-	// 保存更新后的视频数据
-	err = global.DB.Save(&video).Error
-	if err != nil {
-		return err
-	}
-
-	return nil
+// InCreCommentCount 增加评论数量
+func InCreCommentCount(videoId int64, count int) error {
+	return global.DB.Model(&model.Video{}).Where("id = ?", videoId).Update("comment_count", gorm.Expr("comment_count + ?", count)).Error
 }
 
-// CommentRepository QueryCommentsByVideoId 根据视频id查询该视频的评论列表
-type Comments struct{}
-
-func (c *Comments) QueryCommentsByVideoId(videoId int64) ([]model.Comment, error) {
-	var comments []model.Comment
-	if err := global.DB.Preload("User").Where("video_id = ?", videoId).Find(&comments).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, fmt.Errorf("没有找到%d这个视频的评论！", videoId)
-		}
-		return nil, fmt.Errorf("查询评论失败：%w", err)
-	}
-	return comments, nil
+// DeCreCommentCount 减少评论数量
+func DeCreCommentCount(videoId int64, count int) error {
+	return global.DB.Model(&model.Video{}).Where("id = ?", videoId).Update("comment_count", gorm.Expr("comment_count - ?", count)).Error
 }
+

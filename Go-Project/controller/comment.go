@@ -16,20 +16,18 @@ func CommentAction(c *gin.Context) {
 		// 处理videoID解析错误
 		c.JSON(http.StatusBadRequest, response.CommentActionResponse{
 			Response: response.Response{StatusCode: http.StatusBadRequest, StatusMsg: "无效的video_id"},
-
 		})
 		return
 	}
 	actionType := c.Query("action_type")
 	commentText := c.Query("comment_text")
 
-	value, _ := c.Get("userid")
-	userID, ok := value.(int64)
 
-	if !ok {
-		// 处理userid类型断言失败的情况
+	userID, err := strconv.ParseInt(c.Query("user_id"), 10, 64)
+	if err != nil {
+
 		c.JSON(http.StatusBadRequest, response.CommentActionResponse{
-			Response: response.Response{StatusCode: http.StatusBadRequest, StatusMsg: "无效的userid"},
+			Response: response.Response{StatusCode: http.StatusBadRequest, StatusMsg: "无效的token"},
 		})
 		return
 	}
@@ -64,24 +62,14 @@ func CommentList(c *gin.Context) {
 		})
 		return
 	}
-	value, _ := c.Get("userid")
-	userID, ok := value.(int64)
-	if !ok {
-		// 处理userid类型断言失败的情况
-		c.JSON(http.StatusBadRequest, response.CommentActionResponse{
-			Response: response.Response{StatusCode: http.StatusBadRequest, StatusMsg: "无效的userid"},
-		})
-		return
-	}
 
 	// 将获取到的评论添加到commentList列表中
-	commentList, _ := service.GetCommentList(videoID, userID)
+
+	comments, err := service.GetCommentList(videoID)
 	// 返回response
-	c.JSON(http.StatusOK,
-		response.CommentListResponse{
-			Response:    response.Response{StatusCode: 0, StatusMsg: "OK"},
-			CommentList: commentList,
-		})
+	c.JSON(http.StatusOK, response.CommentListResponse{
+		Response:    response.Response{StatusCode: 0, StatusMsg: "OK"},
+		CommentList: comments,
+	})
 	return
 }
-
